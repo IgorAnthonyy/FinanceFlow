@@ -1,6 +1,6 @@
 # FinanceFlow 🪙
 
-FinanceFlow é um ecossistema moderno de gerenciamento financeiro pessoal e controle de carteira estruturado sob uma arquitetura de microsserviços resiliente, utilizando **.NET 9 / ASP.NET Core**, **React (Vite + Tailwind CSS)** no front-end, **RabbitMQ** como message broker para comunicação assíncrona, e **PostgreSQL** para persistência de dados.
+FinanceFlow é um ecossistema moderno de gerenciamento financeiro pessoal e controle de carteira estruturado sob uma arquitetura de microsserviços resiliente, utilizando **.NET 10 / ASP.NET Core**, **React (Vite + Tailwind CSS)** no front-end, **RabbitMQ** como message broker para comunicação assíncrona, **PostgreSQL** para persistência de dados e **OpenTelemetry + Jaeger** para observabilidade distribuída.
 
 ---
 
@@ -14,7 +14,51 @@ O sistema é dividido nos seguintes componentes:
 4. **Wallet.API:** Microsserviço que gerencia as contas bancárias (instituições financeiras), saldos iniciais e a consolidação do patrimônio líquido do usuário.
 5. **Transactions.API:** Serviço focado no registro de movimentações financeiras (receitas e despesas).
 6. **Notifications.Worker:** Worker em background focado em processar eventos de notificação (como e-mails de boas-vindas ou alertas de novas transações).
-7. **SharedKernel (FinanceFlow.SharedKernel):** Biblioteca compartilhada contendo contratos de mensagens, utilitários, tratamento de constantes de comunicação e infraestrutura base de RabbitMQ.
+7. **SharedKernel (FinanceFlow.SharedKernel):** Biblioteca compartilhada contendo contratos de mensagens, utilitários, infraestrutura base de RabbitMQ e a configuração centralizada de OpenTelemetry.
+
+---
+
+## 📡 Observabilidade com OpenTelemetry
+
+Todos os microsserviços são instrumentados com **OpenTelemetry** para rastreamento distribuído e métricas, exportando os dados via protocolo **OTLP** para o **Jaeger**.
+
+### O que é monitorado automaticamente
+
+| Sinal | O que é capturado |
+|---|---|
+| **Tracing** | Cada requisição HTTP recebida, chamadas `HttpClient`, queries EF Core (com SQL) |
+| **Métricas** | Throughput de requisições, latência por endpoint, métricas de runtime .NET |
+
+### Configuração centralizada
+
+A instrumentação é configurada **uma única vez** no `SharedKernel` via o método de extensão `ConfigureOpenTelemetry`, chamado em cada serviço com seu nome:
+
+```csharp
+// Em cada Program.cs — com o nome exclusivo do serviço
+services.ConfigureOpenTelemetry(configuration, "identity-api");
+services.ConfigureOpenTelemetry(configuration, "transactions-api");
+services.ConfigureOpenTelemetry(configuration, "wallet-api");
+services.ConfigureOpenTelemetry(configuration, "notifications-worker", isWorker: true);
+```
+
+O endpoint OTLP é configurado via `appsettings.json` (ou variável de ambiente em produção):
+
+```json
+"OpenTelemetry": {
+  "Endpoint": "http://localhost:4317",
+  "Environment": "development"
+}
+```
+
+### Visualização dos traces
+
+Após subir os containers, acesse o **Jaeger UI** em [http://localhost:16686](http://localhost:16686). Selecione um serviço no dropdown e visualize a timeline completa de cada operação:
+
+```
+POST /api/transactions   (23ms)
+  └── SELECT * FROM transactions WHERE user_id = ...   (8ms)
+  └── INSERT INTO transactions ...                      (5ms)
+```
 
 ---
 
@@ -24,7 +68,7 @@ Os microsserviços do FinanceFlow utilizam comunicação assíncrona baseada em 
 
 ### Estrutura do Message Broker
 
-* **Exchange Principal:** `financeflow-exchange` (do tipo **Topic**). 
+* **Exchange Principal:** `financeflow-exchange` (do tipo **Topic**).  
   O tipo *Topic* permite que as mensagens sejam roteadas para diferentes filas com base em padrões de chaves de roteamento flexíveis (*Routing Keys*).
 * **Idempotência de Declaração:** A classe base `BaseRabbitMqSubscriber` garante a declaração segura e idempotente do exchange na inicialização dos consumidores. Se o exchange já existir, o RabbitMQ reutiliza-o sem interrupções.
 
@@ -49,13 +93,14 @@ graph TD
         NotifyQueue[Fila: notification-service-queue] --> NotifyWorker[Notifications.Worker]
     end
 
-    %% Links
+    %% Links — Publishers para Exchange
     Identity -- "user.created" --> Exchange
     Identity -- "user.updated" --> Exchange
     Transactions -- "transaction.created" --> Exchange
 
+    %% Links — Exchange para filas (Wallet NÃO consome user.updated)
     Exchange -- "user.created <br/> transaction.created" --> WalletQueue
-    Exchange -- "user.created <br/> transaction.created" --> NotifyQueue
+    Exchange -- "user.created <br/> user.updated <br/> transaction.created" --> NotifyQueue
 ```
 
 #### 1. Eventos Publicados (Publishers)
@@ -111,7 +156,10 @@ O ecossistema inteiro pode ser facilmente executado utilizando Docker Compose:
 
 Após subir os containers, os seguintes serviços estarão disponíveis:
 
-* **Web App (Frontend React):** [http://localhost:3000](http://localhost:3000)
-* **API Gateway (YARP Entrypoint):** [http://localhost:5000](http://localhost:5000)
-* **Painel do RabbitMQ (Management):** [http://localhost:15673](http://localhost:15673) (usuário: `guest`, senha: `guest`)
-* **pgAdmin (Banco de Dados):** [http://localhost:5050](http://localhost:5050)
+| Serviço | URL | Observação |
+|---|---|---|
+| **Web App (React)** | [http://localhost:3000](http://localhost:3000) | Front-end da aplicação |
+| **API Gateway (YARP)** | [http://localhost:5000](http://localhost:5000) | Ponto de entrada único |
+| **Jaeger UI** | [http://localhost:16686](http://localhost:16686) | Traces distribuídos |
+| **RabbitMQ Management** | [http://localhost:15673](http://localhost:15673) | Usuário: `guest` / Senha: `guest` |
+| **pgAdmin** | [http://localhost:5050](http://localhost:5050) | Banco de dados |
