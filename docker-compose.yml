@@ -1,0 +1,184 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: financeflow-db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: financeflow-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: financeflow-rabbitmq
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: financeflow-jaeger
+    ports:
+      - "16686:16686"  # UI do Jaeger
+      - "4317:4317"    # OTLP gRPC (recebe traces dos serviços)
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  identity-api:
+    image: financeflow-identity-api
+    build:
+      context: .
+      dockerfile: src/Services/Identity.API/Dockerfile
+    ports:
+      - "5240:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=IdentityDb;Username=${DB_USER};Password=${DB_PASSWORD}
+      - RabbitMq__HostName=${RABBITMQ_HOST}
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - OpenTelemetry__Endpoint=http://jaeger:4317
+      - OpenTelemetry__Environment=production
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+
+  wallet-api:
+    image: financeflow-wallet-api
+    build:
+      context: .
+      dockerfile: src/Services/Wallet.API/Dockerfile
+    ports:
+      - "5145:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=WalletDb;Username=${DB_USER};Password=${DB_PASSWORD}
+      - RabbitMq__HostName=${RABBITMQ_HOST}
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - OpenTelemetry__Endpoint=http://jaeger:4317
+      - OpenTelemetry__Environment=production
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+
+  transactions-api:
+    image: financeflow-transactions-api
+    build:
+      context: .
+      dockerfile: src/Services/Transactions.API/Dockerfile
+    ports:
+      - "5155:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=TransactionsDb;Username=${DB_USER};Password=${DB_PASSWORD}
+      - RabbitMq__HostName=${RABBITMQ_HOST}
+      - Jwt__SecretKey=${JWT_SECRET_KEY}
+      - OpenTelemetry__Endpoint=http://jaeger:4317
+      - OpenTelemetry__Environment=production
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+
+  notifications-worker:
+    image: financeflow-notifications-worker
+    build:
+      context: .
+      dockerfile: src/Services/Notifications.Worker/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=NotificationsDb;Username=${DB_USER};Password=${DB_PASSWORD}
+      - RabbitMq__HostName=${RABBITMQ_HOST}
+      - Smtp__Host=${SMTP_HOST}
+      - Smtp__Port=${SMTP_PORT}
+      - Smtp__Username=${SMTP_USERNAME}
+      - Smtp__Password=${SMTP_PASSWORD}
+      - Smtp__EnableSsl=true
+      - Smtp__FromAddress=${SMTP_FROM_ADDRESS}
+      - Smtp__FromName=${SMTP_FROM_NAME}
+      - Smtp__SaveToFileOnly=false
+      - OpenTelemetry__Endpoint=http://jaeger:4317
+      - OpenTelemetry__Environment=production
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+
+  gateway:
+    image: financeflow-gateway
+    build:
+      context: .
+      dockerfile: src/Gateway/Gateway/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address=http://identity-api:8080
+      - ReverseProxy__Clusters__wallet-cluster__Destinations__destination1__Address=http://wallet-api:8080
+      - ReverseProxy__Clusters__transactions-cluster__Destinations__destination1__Address=http://transactions-api:8080
+    depends_on:
+      identity-api:
+        condition: service_started
+      wallet-api:
+        condition: service_started
+      transactions-api:
+        condition: service_started
+
+  web:
+    image: financeflow-web
+    build:
+      context: src/Web
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL}
+    ports:
+      - "3000:80"
+    depends_on:
+      gateway:
+        condition: service_started
+
+volumes:
+  postgres-data:

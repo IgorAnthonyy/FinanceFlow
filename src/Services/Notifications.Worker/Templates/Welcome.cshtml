@@ -1,0 +1,152 @@
+@using RazorEngineCore
+@using System
+@inherits RazorEngineTemplateBase<dynamic>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bem-vindo ao FinanceFlow</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrapper {
+            width: 100%;
+            background-color: #f8fafc;
+            padding: 40px 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            padding: 48px 32px;
+            text-align: center;
+            color: #ffffff;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            line-height: 1.25;
+        }
+        .header p {
+            margin: 12px 0 0;
+            font-size: 16px;
+            color: #e0e7ff;
+            font-weight: 500;
+        }
+        .content {
+            padding: 40px 32px;
+            line-height: 1.7;
+        }
+        .content p {
+            font-size: 16px;
+            margin: 0 0 24px;
+            color: #334155;
+        }
+        .content strong {
+            color: #0f172a;
+        }
+        .card {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+        }
+        .card h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .card ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #475569;
+        }
+        .card li {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .btn-container {
+            text-align: center;
+            margin-top: 32px;
+            margin-bottom: 8px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background-color: #4f46e5;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
+            transition: background-color 0.2s;
+        }
+        .footer {
+            background-color: #f1f5f9;
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            margin: 0 0 8px;
+        }
+        .footer p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>FinanceFlow</h1>
+                <p>Gestão Financeira Inteligente</p>
+            </div>
+            <div class="content">
+                <p>Olá, <strong>@Model.Name</strong>!</p>
+                <p>Bem-vindo ao FinanceFlow. Estamos muito felizes em ter você conosco! Sua conta foi criada com sucesso com o endereço de email <strong>@Model.Email</strong>.</p>
+                
+                <div class="card">
+                    <h3>Comece em 3 passos simples:</h3>
+                    <ul>
+                        <li>Acesse sua carteira digital instantaneamente.</li>
+                        <li>Vincule contas bancárias para consolidar seus saldos.</li>
+                        <li>Faça transações com segurança e acompanhe seus fluxos de caixa.</li>
+                    </ul>
+                </div>
+
+                <p>Nossa plataforma ajuda você a monitorar suas transações, definir limites de gastos e atingir seus objetivos financeiros com resumos automatizados e análises completas.</p>
+                
+                <div class="btn-container">
+                    <a href="#" class="btn">Acessar Painel</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>Esta é uma notificação automática, por favor não responda a este email.</p>
+                <p>© @DateTime.Now.Year FinanceFlow Inc. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

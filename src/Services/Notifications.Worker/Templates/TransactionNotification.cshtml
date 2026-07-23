@@ -1,0 +1,221 @@
+@using RazorEngineCore
+@using System
+@inherits RazorEngineTemplateBase<dynamic>
+@{
+    bool isCredit = Model.Transaction.Type.ToLower() == "income" || Model.Transaction.Type.ToLower() == "deposit" || Model.Transaction.Type.ToLower() ==
+    "credit" || Model.Transaction.Type.ToLower() == "entrada";
+
+    string primaryColor = isCredit ? "#10b981" : "#ef4444";
+
+    string gradientStart = isCredit ? "#10b981" : "#ef4444";
+
+    string gradientEnd = isCredit ? "#059669" : "#dc2626";
+
+    string typeLabel = isCredit ? "Crédito Recebido" : "Débito Realizado";
+    string ptBrType = isCredit ? "Entrada" : "Saída";
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alerta de Transação</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .wrapper {
+            width: 100%;
+            background-color: #f8fafc;
+            padding: 40px 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        .header {
+            background: linear-gradient(135deg, @gradientStart 0%, @gradientEnd 100%);
+            padding: 40px 32px;
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            margin: 8px 0 0;
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 40px 32px;
+            line-height: 1.7;
+        }
+
+        .content p {
+            font-size: 16px;
+            margin: 0 0 24px;
+            color: #334155;
+        }
+
+        .content strong {
+            color: #0f172a;
+        }
+
+        .transaction-card {
+            background-color: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .amount-section {
+            padding: 24px;
+            text-align: center;
+            border-bottom: 1px dashed #e2e8f0;
+            background-color: #ffffff;
+        }
+
+        .amount-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .amount-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: @primaryColor;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .details-row {
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .details-row:last-child {
+            border-bottom: none;
+        }
+
+        .details-label {
+            padding: 16px 24px;
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .details-val {
+            padding: 16px 24px;
+            font-size: 14px;
+            color: #0f172a;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .btn-container {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            background-color: #4f46e5;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1);
+        }
+
+        .footer {
+            background-color: #f1f5f9;
+            padding: 24px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer p {
+            margin: 0 0 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Alerta de Transação</h1>
+                <p>@typeLabel</p>
+            </div>
+            <div class="content">
+                 <p>Olá, <strong>@Model.User.Name</strong>,</p>
+                <p>Gostaríamos de informar que uma nova transação foi processada em sua conta. Os detalhes da transação
+                    estão resumidos abaixo:</p>
+
+                <div class="transaction-card">
+                    <div class="amount-section">
+                        <div class="amount-title">Valor da Transação</div>
+                        <div class="amount-value">@(isCredit ? "+" : "-") @Model.Transaction.FormattedAmount</div>
+                    </div>
+                    <table class="details-table">
+                        <tr class="details-row">
+                            <th class="details-label">Tipo</th>
+                            <td class="details-val">@ptBrType</td>
+                        </tr>
+                        <tr class="details-row">
+                            <th class="details-label">Conta Bancária</th>
+                            <td class="details-val">@Model.Transaction.BankAccountName</td>
+                        </tr>
+                        <tr class="details-row">
+                            <th class="details-label">Data e Hora</th>
+                            <td class="details-val">@Model.Transaction.Date</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <p>Se você não reconhece esta atividade, por favor entre em contato com o suporte imediatamente ou
+                    proteja sua conta através do painel.</p>
+            </div>
+            <div class="footer">
+                <p>Esta é uma notificação automática, por favor não responda a este email.</p>
+                <p>© @DateTime.Now.Year FinanceFlow Inc. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

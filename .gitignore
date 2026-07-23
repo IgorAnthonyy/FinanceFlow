@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+# .NET Build Outputs
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Pp]ublish/
+
+# IDEs and Editors cache and settings
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS files
+[Tt]humbs.db
+[Dd]esktop.ini

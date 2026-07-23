@@ -1,0 +1,8 @@
+{
+  "name": "Remix: FinanceFlow",
+  "description": "Premium wealth management platform with advanced analytics, real-time transaction tracking, and personalized financial insights through a sophisticated glassmorphism interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
