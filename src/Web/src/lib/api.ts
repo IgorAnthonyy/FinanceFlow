@@ -108,7 +108,7 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
       isRefreshing = true;
       refreshPromise = (async () => {
         try {
-          const res = await fetch(`${AUTH_API}/User/renew`, {
+          const res = await fetch(`${AUTH_API}/users/renew`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
           });
@@ -158,7 +158,7 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
 export const api = {
   async login(email: string, password: string) {
-    const res = await fetch(`${AUTH_API}/User/login`, {
+    const res = await fetch(`${AUTH_API}/users/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -171,7 +171,7 @@ export const api = {
   },
 
   async register(name: string, email: string, password: string) {
-    const res = await fetch(`${AUTH_API}/User`, {
+    const res = await fetch(`${AUTH_API}/users`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),
@@ -184,7 +184,7 @@ export const api = {
   },
 
   async getWallet(userId: string) {
-    return fetchWithAuth(`${WALLET_API}/Wallet/user/${userId}`);
+    return fetchWithAuth(`${WALLET_API}/wallets/user/${userId}`);
   },
 
   async getWalletReport() {
@@ -223,6 +223,7 @@ export const api = {
     return fetchWithAuth(`${TRANSACTIONS_API}/reports/dashboard/daily-evolution${query}`);
   },
 
+
   async getLatestTransactions(startDate?: string, endDate?: string) {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
@@ -232,18 +233,18 @@ export const api = {
   },
 
   async updateProfile(name: string, email: string) {
-    return fetchWithAuth(`${AUTH_API}/User/profile`, {
+    return fetchWithAuth(`${AUTH_API}/users/profile`, {
       method: 'PUT',
       body: JSON.stringify({ name, email }),
     });
   },
 
   async getBankAccounts(userId: string) {
-    return fetchWithAuth(`${WALLET_API}/BankAccount/user/${userId}`);
+    return fetchWithAuth(`${WALLET_API}/bank-accounts/user/${userId}`);
   },
 
   async createBankAccount(userId: string, bankName: string, accountName: string, balance: number) {
-    return fetchWithAuth(`${WALLET_API}/BankAccount`, {
+    return fetchWithAuth(`${WALLET_API}/bank-accounts`, {
       method: 'POST',
       body: JSON.stringify({ userId, bankName, accountName, balance }),
     });

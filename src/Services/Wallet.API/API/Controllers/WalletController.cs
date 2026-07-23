@@ -9,7 +9,7 @@ namespace Wallet.API.Controllers;
 /// </summary>
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/wallets")]
 public class WalletController : ControllerBase
 {
     private readonly IWalletApplicationService _walletApplicationService;

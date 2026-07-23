@@ -10,7 +10,7 @@ namespace Identity.API.Controllers;
 /// Controller responsável pelo gerenciamento de usuários e autenticação.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/users")]
 public class UserController : ControllerBase
 {
     private readonly IUserApplicationService _userApplicationService;
